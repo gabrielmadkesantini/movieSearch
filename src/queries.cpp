@@ -149,13 +149,31 @@ void queryPrefix(DataContext& ctx, const std::string& prefix) {
     });
 
     std::cout << std::fixed << std::setprecision(6);
-    for (const auto& r : results) {
-        std::cout << r.movieId << " | "
-                  << r.title << " | "
-                  << r.genres << " | "
-                  << r.avg << " | "
-                  << r.ratingCount << "\n";
+
+    if (results.empty()) {
+        return;
     }
+
+    std::cout
+        << std::setw(6)  << "ID"
+        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(10) << "AvgRate"
+        << " | " << std::setw(8)  << "Ratings"
+        << '\n';
+
+    std::cout << std::string(105, '-') << '\n';
+
+    for (const auto& r : results) {
+        std::cout
+            << std::setw(6)  << r.movieId
+            << " | " << std::setw(45) << r.title.substr(0, 45)
+            << " | " << std::setw(25) << r.genres.substr(0, 25)
+            << " | " << std::setw(10) << r.avg
+            << " | " << std::setw(8)  << r.ratingCount
+            << '\n';
+    }
+
 }
 
 void queryUser(DataContext& ctx, int userId) {
@@ -202,17 +220,37 @@ void queryUser(DataContext& ctx, int userId) {
     });
 
     std::cout << std::fixed << std::setprecision(6);
+
     int limit = static_cast<int>(results.size());
     if (limit > 20) limit = 20;
 
+    if (limit == 0) {
+        return;
+    }
+
+    // Cabeçalho específico de USER
+    std::cout
+        << std::setw(6)  << "ID"
+        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(10) << "UserRate"
+        << " | " << std::setw(10) << "GlobalAvg"
+        << " | " << std::setw(8)  << "Ratings"
+        << '\n';
+
+    std::cout << std::string(95, '-') << '\n';
+
+    // Dados
     for (int i = 0; i < limit; ++i) {
         const auto& r = results[i];
-        std::cout << r.movieId << " | "
-                  << r.title << " | "
-                  << r.userRating << " | "
-                  << r.globalAvg << " | "
-                  << r.ratingCount << "\n";
+        std::cout
+            << std::setw(6)  << r.movieId
+            << " | " << std::setw(45) << r.title.substr(0, 45)
+            << " | " << std::setw(10) << r.userRating
+            << " | " << std::setw(10) << r.globalAvg
+            << " | " << std::setw(8)  << r.ratingCount
+            << '\n';
     }
+
 }
 
 void queryTop(DataContext& ctx, int n, const std::string& genre) {
@@ -260,14 +298,33 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
     int limit = static_cast<int>(results.size());
     if (n < limit) limit = n;
 
+    if (limit == 0) {
+        return;
+    }
+
+    // Cabeçalho
+    std::cout
+        << std::setw(6)  << "ID"
+        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(10) << "AvgRate"
+        << " | " << std::setw(8)  << "Ratings"
+        << '\n';
+
+    std::cout << std::string(105, '-') << '\n';
+
+    // Dados
     for (int i = 0; i < limit; ++i) {
         const auto& r = results[i];
-        std::cout << r.movieId << " | "
-                  << r.title << " | "
-                  << r.genres << " | "
-                  << r.avg << " | "
-                  << r.ratingCount << "\n";
+        std::cout
+            << std::setw(6)  << r.movieId
+            << " | " << std::setw(45) << r.title.substr(0, 45)
+            << " | " << std::setw(25) << r.genres.substr(0, 25)
+            << " | " << std::setw(10) << r.avg
+            << " | " << std::setw(8)  << r.ratingCount
+            << '\n';
     }
+
 }
 
 void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
@@ -370,14 +427,30 @@ void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
         return a.movieId < b.movieId;
     });
 
-    std::cout << std::fixed << std::setprecision(6);
+        std::cout << std::fixed << std::setprecision(6);
+
+    // Cabeçalho
+    std::cout
+        << std::setw(6)  << "ID"
+        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(10) << "AvgRate"
+        << " | " << std::setw(8)  << "Ratings"
+        << '\n';
+
+    std::cout << std::string(105, '-') << '\n';
+
+    // Dados
     for (const auto& r : results) {
-        std::cout << r.movieId << " | "
-                  << r.title << " | "
-                  << r.genres << " | "
-                  << r.avg << " | "
-                  << r.ratingCount << "\n";
+        std::cout
+            << std::setw(6)  << r.movieId
+            << " | " << std::setw(45) << r.title.substr(0,45)
+            << " | " << std::setw(25) << r.genres.substr(0,25)
+            << " | " << std::setw(10) << r.avg
+            << " | " << std::setw(8)  << r.ratingCount
+            << '\n';
     }
+
 }
 
 } // namespace queries
