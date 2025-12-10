@@ -15,5 +15,9 @@ struct DataContext {
         std::size_t movieCap = 30000,
         std::size_t userCap  = 300000,
         std::size_t tagCap   = 500000
-    );
+    )
+        : movies(movieCap),
+          users(userCap),
+          tags(tagCap),
+          trie() {}
 };

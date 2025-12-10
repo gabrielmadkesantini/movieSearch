@@ -1,2 +1,11 @@
-# Ignorar todos os arquivos CSV em qualquer pasta
+# arquivos compilados / executáveis
+*.exe
+*.out
+*.o
+*.obj
 *.csv
+
+# build folders
+build/
+bin/
+dist/
