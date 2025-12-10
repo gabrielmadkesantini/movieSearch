@@ -68,42 +68,55 @@ DEVE IMPLEMENTAR:
 namespace {
 
 // Helpers for tag normalization
-std::string trim(const std::string& s) {
-    std::size_t start = 0;
-    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
-        ++start;
-    }
-    if (start == s.size()) return "";
+    std::string trim(const std::string& s) {
+        std::size_t start = 0;
+        while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
+            ++start;
+        }
+        if (start == s.size()) return "";
 
-    std::size_t end = s.size();
-    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) {
-        --end;
-    }
-    return s.substr(start, end - start);
-}
-
-std::string toLower(const std::string& s) {
-    std::string result;
-    result.reserve(s.size());
-    for (char c : s) {
-        result.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
-    }
-    return result;
-}
-
-// Normaliza a tag vinda do comando `tags`
-std::string normalizeTag(const std::string& raw) {
-    std::string tag = trim(raw);
-
-    // se vier com aspas simples nas pontas, remove
-    if (tag.size() >= 2 && tag.front() == '\'' && tag.back() == '\'') {
-        tag = tag.substr(1, tag.size() - 2);
+        std::size_t end = s.size();
+        while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) {
+            --end;
+        }
+        return s.substr(start, end - start);
     }
 
-    tag = trim(tag);
-    tag = toLower(tag);
-    return tag;
-}
+    std::string toLower(const std::string& s) {
+        std::string result;
+        result.reserve(s.size());
+        for (char c : s) {
+            result.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+        }
+        return result;
+    }
+
+    // Normaliza a tag vinda do comando `tags`
+    std::string normalizeTag(const std::string& raw) {
+        std::string tag = trim(raw);
+
+        // se vier com aspas simples nas pontas, remove
+        if (tag.size() >= 2 && tag.front() == '\'' && tag.back() == '\'') {
+            tag = tag.substr(1, tag.size() - 2);
+        }
+
+        tag = trim(tag);
+        tag = toLower(tag);
+        return tag;
+    }
+
+    std::string extractGenres(const std::string& s) {
+        auto pos = s.find(',');
+        if (pos == std::string::npos) return s;
+        return s.substr(0, pos);
+    }
+
+    std::string extractYear(const std::string& s) {
+        auto pos = s.find(',');
+        if (pos == std::string::npos) return "";
+        return s.substr(pos + 1);
+    }
+
 
 } // namespace
 
@@ -156,23 +169,30 @@ void queryPrefix(DataContext& ctx, const std::string& prefix) {
 
     std::cout
         << std::setw(6)  << "ID"
-        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(40) << "Title"
         << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(6)  << "Year"
         << " | " << std::setw(10) << "AvgRate"
-        << " | " << std::setw(8)  << "Ratings"
+        << " | " << std::setw(8)  << "count"
         << '\n';
 
     std::cout << std::string(105, '-') << '\n';
 
+
     for (const auto& r : results) {
+        std::string genres = extractGenres(r.genres);
+        std::string year   = extractYear(r.genres);
+
         std::cout
             << std::setw(6)  << r.movieId
-            << " | " << std::setw(45) << r.title.substr(0, 45)
-            << " | " << std::setw(25) << r.genres.substr(0, 25)
+            << " | " << std::setw(40) << r.title.substr(0,40)
+            << " | " << std::setw(25) << genres.substr(0,25)
+            << " | " << std::setw(6)  << year
             << " | " << std::setw(10) << r.avg
             << " | " << std::setw(8)  << r.ratingCount
             << '\n';
     }
+
 
 }
 
@@ -180,10 +200,12 @@ void queryUser(DataContext& ctx, int userId) {
     struct UserResult {
         int movieId;
         std::string title;
+        std::string genres;
         float userRating;
         double globalAvg;
         int ratingCount;
     };
+
 
     User* user = ctx.users.find(userId);
     if (!user) {
@@ -203,10 +225,12 @@ void queryUser(DataContext& ctx, int userId) {
         results.push_back(UserResult{
             m->movieId,
             m->title,
+            m->genres,
             ur.rating,
             avg,
             m->ratingCount
         });
+
     }
 
     if (results.empty()) {
@@ -231,25 +255,32 @@ void queryUser(DataContext& ctx, int userId) {
     // Cabeçalho específico de USER
     std::cout
         << std::setw(6)  << "ID"
-        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(40) << "Title"
+        << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(6)  << "Year"
         << " | " << std::setw(10) << "UserRate"
         << " | " << std::setw(10) << "GlobalAvg"
-        << " | " << std::setw(8)  << "Ratings"
+        << " | " << std::setw(8)  << "count"
         << '\n';
 
-    std::cout << std::string(95, '-') << '\n';
+    std::cout << std::string(110, '-') << '\n';
 
-    // Dados
     for (int i = 0; i < limit; ++i) {
         const auto& r = results[i];
+        std::string genres = extractGenres(r.genres);
+        std::string year   = extractYear(r.genres);
+
         std::cout
             << std::setw(6)  << r.movieId
-            << " | " << std::setw(45) << r.title.substr(0, 45)
+            << " | " << std::setw(40) << r.title.substr(0,40)
+            << " | " << std::setw(25) << genres.substr(0,25)
+            << " | " << std::setw(6)  << year
             << " | " << std::setw(10) << r.userRating
             << " | " << std::setw(10) << r.globalAvg
             << " | " << std::setw(8)  << r.ratingCount
             << '\n';
     }
+
 
 }
 
@@ -266,15 +297,19 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
     std::vector<TopResult> results;
     results.reserve(table.size());
 
+    // Varre todos os filmes na hash
     for (const auto& entry : table) {
         if (!entry.occupied || entry.deleted) continue;
 
         const Movie& m = entry.value;
+
+        // Requisitos do enunciado
         if (m.ratingCount < 1000) continue;
         if (m.ratingCount <= 0) continue;
-        if (genre.size() > 0 && m.genres.find(genre) == std::string::npos) continue;
+        if (!genre.empty() && m.genres.find(genre) == std::string::npos) continue;
 
         double avg = m.ratingSum / static_cast<double>(m.ratingCount);
+
         results.push_back(TopResult{
             m.movieId,
             m.title,
@@ -288,6 +323,7 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
         return;
     }
 
+    // Ordena por média global desc, depois ratingCount desc, depois movieId asc
     sort_utils::quickSort(results, [](const TopResult& a, const TopResult& b) {
         if (a.avg != b.avg) return a.avg > b.avg;
         if (a.ratingCount != b.ratingCount) return a.ratingCount > b.ratingCount;
@@ -295,9 +331,9 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
     });
 
     std::cout << std::fixed << std::setprecision(6);
+
     int limit = static_cast<int>(results.size());
     if (n < limit) limit = n;
-
     if (limit == 0) {
         return;
     }
@@ -305,27 +341,33 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
     // Cabeçalho
     std::cout
         << std::setw(6)  << "ID"
-        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(40) << "Title"
         << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(6)  << "Year"
         << " | " << std::setw(10) << "AvgRate"
         << " | " << std::setw(8)  << "Ratings"
         << '\n';
 
-    std::cout << std::string(105, '-') << '\n';
+    std::cout << std::string(110, '-') << '\n';
 
-    // Dados
+    // Linhas (respeitando o limite N)
     for (int i = 0; i < limit; ++i) {
         const auto& r = results[i];
+
+        std::string genres = extractGenres(r.genres); // antes da vírgula
+        std::string year   = extractYear(r.genres);   // depois da vírgula
+
         std::cout
             << std::setw(6)  << r.movieId
-            << " | " << std::setw(45) << r.title.substr(0, 45)
-            << " | " << std::setw(25) << r.genres.substr(0, 25)
+            << " | " << std::setw(40) << r.title.substr(0, 40)
+            << " | " << std::setw(25) << genres.substr(0, 25)
+            << " | " << std::setw(6)  << year
             << " | " << std::setw(10) << r.avg
             << " | " << std::setw(8)  << r.ratingCount
             << '\n';
     }
-
 }
+
 
 void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
     struct TagResult {
@@ -429,23 +471,27 @@ void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
 
         std::cout << std::fixed << std::setprecision(6);
 
-    // Cabeçalho
     std::cout
         << std::setw(6)  << "ID"
-        << " | " << std::setw(45) << "Title"
+        << " | " << std::setw(40) << "Title"
         << " | " << std::setw(25) << "Genres"
+        << " | " << std::setw(6)  << "Year"
         << " | " << std::setw(10) << "AvgRate"
-        << " | " << std::setw(8)  << "Ratings"
+        << " | " << std::setw(8)  << "count"
         << '\n';
 
     std::cout << std::string(105, '-') << '\n';
 
-    // Dados
+
     for (const auto& r : results) {
+        std::string genres = extractGenres(r.genres);
+        std::string year   = extractYear(r.genres);
+
         std::cout
             << std::setw(6)  << r.movieId
-            << " | " << std::setw(45) << r.title.substr(0,45)
-            << " | " << std::setw(25) << r.genres.substr(0,25)
+            << " | " << std::setw(40) << r.title.substr(0,40)
+            << " | " << std::setw(25) << genres.substr(0,25)
+            << " | " << std::setw(6)  << year
             << " | " << std::setw(10) << r.avg
             << " | " << std::setw(8)  << r.ratingCount
             << '\n';
