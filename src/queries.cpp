@@ -91,7 +91,22 @@ std::string toLower(const std::string& s) {
     return result;
 }
 
+// Normaliza a tag vinda do comando `tags`
+std::string normalizeTag(const std::string& raw) {
+    std::string tag = trim(raw);
+
+    // se vier com aspas simples nas pontas, remove
+    if (tag.size() >= 2 && tag.front() == '\'' && tag.back() == '\'') {
+        tag = tag.substr(1, tag.size() - 2);
+    }
+
+    tag = trim(tag);
+    tag = toLower(tag);
+    return tag;
+}
+
 } // namespace
+
 
 namespace queries {
 
@@ -268,18 +283,19 @@ void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
         return;
     }
 
-    // Get movie lists for each tag
+ // Get movie lists for each tag
     std::vector<std::vector<int>> tagMovieLists;
     tagMovieLists.reserve(tags.size());
 
     for (const auto& t : tags) {
-        std::string norm = toLower(trim(t));
+        std::string norm = normalizeTag(t);
         if (norm.empty()) {
             tagMovieLists.push_back(std::vector<int>{});
             continue;
         }
         tagMovieLists.push_back(ctx.tags.getMovies(norm));
     }
+
 
     // If any list is empty, intersection is empty
     for (const auto& lst : tagMovieLists) {
