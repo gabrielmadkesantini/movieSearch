@@ -1,38 +1,4 @@
 #include "tags.hpp"
-
-/*
-RESPONSABILIDADE DESTE ARQUIVO
-
-- Implementar a classe TagHashTable.
-- Controlar associação: tag -> lista de movieIds.
-- Hash manual para strings.
-- NÃO usar unordered_map ou map.
-
-DEVE IMPLEMENTAR:
-
-1. Construtor TagHashTable(capacity)
-   - Inicializar array de entradas
-   - Iniciar contador
-
-2. hash(string)
-   - Hash simples para string (ex: multiplicativo)
-
-3. probe(index, step)
-   - Estratégia de colisão
-
-4. addMovie(tag, movieId)
-   - Se a tag existir:
-        adicionar movieId à lista se ainda não estiver nela
-   - Se não existir:
-        criar nova entrada de tag
-        inicializar lista com esse movieId
-
-5. getMovies(tag)
-   - Retornar lista de filmes associados à tag
-   - Retornar vetor vazio se não existir
-*/
-
-#include "tags.hpp"
 #include <cstddef>
 
 TagHashTable::TagHashTable(std::size_t capacity) : table(), count(0) {
@@ -66,34 +32,27 @@ void TagHashTable::addMovie(const std::string& tag, int movieId) {
         TagHashEntry& entry = table[idx];
 
         if (entry.occupied) {
-            if (!entry.deleted && entry.key == tag) {
-                // Tag already exists: add movieId if not present
+            //verifica se a tag ja existe na tabela e verifica se o id do filme ja esta associado a essa tag
+            if (entry.key == tag) {
+                
                 bool exists = false;
+                //percorre a lista de ids dos filmes associados a essa tag e verifica se ja existe
                 for (int id : entry.movieIds) {
                     if (id == movieId) {
                         exists = true;
                         break;
                     }
                 }
+                //caso nao exisitr adiciona o id do filme na lista
                 if (!exists) {
+                    //adiciona no final da lista
                     entry.movieIds.push_back(movieId);
                 }
                 return;
             }
-            // occupied with different key or deleted; keep probing
+            // esta ocupado com uma tag diferente, continua para o proximo passo
         } else {
-            // Not occupied
-            if (entry.deleted) {
-                // Remember first deleted slot to reuse if key not found later
-                if (firstDeletedIndex == static_cast<std::size_t>(-1)) {
-                    firstDeletedIndex = idx;
-                }
-                // continue probing to ensure tag is not already in table
-            } else {
-                // Truly empty slot, can insert here
-                if (firstDeletedIndex != static_cast<std::size_t>(-1)) {
-                    idx = firstDeletedIndex;
-                }
+                // Slot esta vazio, entao pode inserir a nova tag aqui
                 TagHashEntry& insertEntry = table[idx];
                 insertEntry.key = tag;
                 insertEntry.movieIds.clear();
@@ -102,23 +61,8 @@ void TagHashTable::addMovie(const std::string& tag, int movieId) {
                 insertEntry.deleted = false;
                 ++count;
                 return;
-            }
         }
     }
-
-    // Fallback if table is full: insert/overwrite at index 0 or firstDeletedIndex if available
-    std::size_t idx = (firstDeletedIndex != static_cast<std::size_t>(-1))
-                      ? firstDeletedIndex
-                      : 0;
-    TagHashEntry& entry = table[idx];
-    if (!entry.occupied || entry.deleted) {
-        ++count;
-    }
-    entry.key = tag;
-    entry.movieIds.clear();
-    entry.movieIds.push_back(movieId);
-    entry.occupied = true;
-    entry.deleted = false;
 }
 
 std::vector<int> TagHashTable::getMovies(const std::string& tag) const {
@@ -130,15 +74,16 @@ std::vector<int> TagHashTable::getMovies(const std::string& tag) const {
         std::size_t idx = probe(h, step);
         const TagHashEntry& entry = table[idx];
 
-        if (!entry.occupied && !entry.deleted) {
-            // Never occupied: tag not found
+        if (!entry.occupied) {
+            // Tag nao foi encontrada
             return {};
         }
 
-        if (entry.occupied && !entry.deleted && entry.key == tag) {
+        if (entry.occupied && entry.key == tag) {
+            // Tag nao foi encontrada
             return entry.movieIds;
         }
-        // Otherwise, continue probing
+        // Senao cokntinua a busca fazendo p "probe" qeu avança para o proximo indice que pode esta livre ou nao
     }
 
     return {};

@@ -1,52 +1,5 @@
 #include "trie.hpp"
 
-/*
-RESPONSABILIDADE DESTE ARQUIVO
-
-- Implementar TRIE de títulos dos filmes.
-- Cada nodo armazena:
-    - Ponteiros para 128 caracteres ASCII possíveis.
-    - Flag de final de título.
-    - Lista de movieIds terminando naquele nodo.
-
-DEVE IMPLEMENTAR:
-
-1. Construtor TrieNode()
-   - Inicializar children com nullptr
-   - isTerminal = false
-
-2. Construtor TitleTrie()
-   - Criar root
-
-3. Destruidor ~TitleTrie()
-   - Liberar toda a memória recursivamente
-
-4. freeNode(node)
-   - Função auxiliar para deletar a TRIE inteira
-
-5. insert(title, movieId)
-   - Percorrer caractere por caractere
-   - Criar nodos conforme necessário
-   - Ao final:
-        marcar isTerminal = true
-        adicionar movieId à lista do nodo
-
-6. searchPrefix(prefix)
-   - Percorrer até o nodo do prefixo
-   - Usar collect() para:
-        percorrer toda subárvore
-        carregar todos movieIds encontrados
-
-7. collect(node, out)
-   - Busca recursiva em profundidade:
-        se node->isTerminal == true:
-            adicionar todos movieIds do nodo ao vetor de saída
-        visitar todos os filhos
-*/
-
-
-#include "trie.hpp"
-
 //Inicializa children com nullptr e isTerminal = false
 TrieNode::TrieNode() : isTerminal(false), movieIds() {
     for (int i = 0; i < 128; ++i) {
