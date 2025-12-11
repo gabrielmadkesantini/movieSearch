@@ -1,38 +1,87 @@
-movie.cpp
-Responsável pela implementação da Tabela Hash de Filmes.
-Armazena os dados de cada filme indexados por movieId: título, gêneros, ano, soma das avaliações e quantidade de avaliações. Permite inserção e busca em tempo O(1) esperado, além de acesso à tabela completa para iteração nas consultas.
+# Documentação do Projeto
 
-trie.cpp
-Implementa a TRIE de títulos dos filmes.
-Armazena todos os títulos caractere a caractere e, nos nós terminais, guarda a lista de movieIds associados ao título completo. É utilizada para a busca eficiente por prefixo na consulta “prefix”.
+Este projeto implementa um sistema de indexação e consulta de filmes utilizando estruturas otimizadas como Tabelas Hash e TRIE, além de leitura eficiente de grandes CSVs do MovieLens.
 
-users.cpp
-Implementa a Tabela Hash de Usuários.
-Mapeia userId para uma estrutura User que contém uma lista de avaliações do usuário, cada uma com movieId e nota. É utilizada para responder à consulta “user”, permitindo encontrar rapidamente o histórico de avaliações de um usuário específico.
+A seguir, cada componente do sistema é documentado separadamente.
 
-tags.cpp
-Implementa a Tabela Hash de Tags.
-Mapeia cada tag (string) para uma lista de movieIds que receberam aquela marcação. Dá suporte à consulta “tags”, permitindo buscar filmes associados a uma ou mais tags por meio da interseção dessas listas.
+## movie.cpp — Tabela Hash de Filmes
 
-data_loader.cpp
-Responsável pela leitura dos arquivos movies.csv, ratings.csv e tags.csv.
+Responsável pela implementação da tabela hash que armazena informações sobre filmes.
+
+- Indexa cada filme pelo movieId.
+- Armazena: título, gêneros, ano, soma das notas e quantidade de avaliações.
+- Inserções e buscas possuem tempo esperado O(1).
+- Permite acesso para iteração completa da tabela, usado nas consultas como top filmes.
+
+## trie.cpp — TRIE para Títulos de Filmes
+
+Implementa a TRIE utilizada para busca por prefixo.
+
+- Armazena cada título caractere a caractere.
+- Nós terminais contêm uma lista de `movieId`s correspondentes ao título completo.
+- Suporta consultas de prefixo muito rápidas.
+- Utilizada na consulta prefix.
+
+## users.cpp — Tabela Hash de Usuários
+
+Implementa a estrutura hash que mapeia usuários para suas avaliações.
+
+- Mapeia userId → User.
+- Cada usuário contém uma lista de avaliações: (movieId, rating).
+- Utilizada na consulta user.
+- Permite recuperar rapidamente o histórico de avaliações de um usuário específico.
+
+## tags.cpp — Tabela Hash de Tags
+
+Estrutura responsável por armazenar listas de filmes associados a cada tag.
+
+- Mapeia tag (string) → lista de movieIds.
+- Base da consulta tags, que busca filmes por múltiplas tags.
+- Suporta interseção rápida das listas para filtrar apenas filmes que possuam todas as tags dadas.
+
+## data_loader.cpp — Leitura dos Arquivos CSV
+
+Gerencia a importação dos dados dos arquivos:
+
+- movies.csv
+- ratings.csv
+- tags.csv
+
 Durante o carregamento:
-– Insere filmes na Tabela Hash de Filmes e seus títulos na TRIE.
-– Atualiza soma e contagem de notas dos filmes a partir das avaliações e preenche a Tabela Hash de Usuários.
-– Normaliza as tags e popula a Tabela Hash de Tags associando tags aos filmes correspondentes.
 
-queries.cpp
-Implementa todas as consultas do sistema:
-– Busca por prefixo de título usando a TRIE.
-– Consulta do histórico de avaliações de um usuário usando a Tabela Hash de Usuários.
-– Consulta de top filmes por gênero usando a Tabela Hash de Filmes.
-– Consulta de filmes por múltiplas tags usando a Tabela Hash de Tags e interseção de listas.
-Também realiza ordenações auxiliares e a formatação da saída.
+- Insere filmes na Tabela Hash de Filmes.
+- Insere títulos na TRIE.
+- Atualiza soma e contagem de notas dos filmes.
+- Popula a Tabela Hash de Usuários.
+- Normaliza e adiciona tags na Tabela Hash de Tags.
 
-main.cpp
-Arquivo principal do programa.
-Inicializa o DataContext, carrega todos os CSVs por meio do data_loader e executa o loop de leitura de comandos do usuário, direcionando cada comando para a query correspondente.
+Serve como etapa inicial para construir todo o DataContext.
 
-sort_utils.cpp
-Arquivo auxiliar de ordenação.
-Inclui o header sort_utils.hpp, que contém implementações template de funções de ordenação usadas nas consultas. Serve apenas como suporte técnico e não implementa uma estrutura de dados específica.
+## queries.cpp — Implementação das Consultas
+
+Contém todas as operações que o usuário pode solicitar:
+
+- Busca de títulos por prefixo (via TRIE).
+- Consulta do histórico de avaliações de um usuário.
+- Listagem dos top filmes por gênero.
+- Busca de filmes por múltiplas tags (via interseção).
+- Ordenações auxiliares e formatação da saída.
+
+É o “cérebro” da parte interativa do projeto.
+
+## main.cpp — Entrada do Programa
+
+Arquivo principal responsável por:
+
+- Inicializar o DataContext.
+- Carregar todas as estruturas chamando o data_loader.
+- Ler comandos digitados pelo usuário.
+- Encaminhar cada comando para a função apropriada em queries.cpp.
+
+## sort_utils.cpp — Utilidades de Ordenação
+
+Arquivo auxiliar para rotinas de ordenação do sistema.
+
+- Inclui sort_utils.hpp, contendo templates e funções de ordenação.
+- Usado como suporte interno para ordenação nas consultas.
+- Não implementa nenhuma estrutura de dados principal.
