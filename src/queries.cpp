@@ -34,7 +34,7 @@ namespace {
         return result;
     }
 
-    // Normaliza a tag vinda do comando `tags`
+    // Normaliza a tag vinda do comando tags
     std::string normalizeTag(const std::string& raw) {
         std::string tag = trim(raw);
 
@@ -98,6 +98,9 @@ void queryPrefix(DataContext& ctx, const std::string& prefix) {
         return;
     }
 
+    //Os resultados com a maior média de avaliação aparecerão primeiro na lista.
+    // Em caso de empate na média, o filme com maior número de avaliações aparecerá primeiro.
+    // Se ainda houver empate, o filme com o menor movieId aparecerá primeiro.
     sort_utils::quickSort(results, [](const PrefixResult& a, const PrefixResult& b) {
         if (a.avg != b.avg) return a.avg > b.avg;
         if (a.ratingCount != b.ratingCount) return a.ratingCount > b.ratingCount;
@@ -180,6 +183,9 @@ void queryUser(DataContext& ctx, int userId) {
         return;
     }
 
+    // O fator mais importante é a nota que o usuário deu ao item. Resultados com a classificação mais alta do próprio usuário são priorizados
+    // Em caso de empate, a média global do filme é usada como critério de desempate, com médias mais altas tendo prioridade.
+    // Se ainda houver empate, o filme com o menor movieId aparecerá primeiro.
     sort_utils::quickSort(results, [](const UserResult& a, const UserResult& b) {
         if (a.userRating != b.userRating) return a.userRating > b.userRating;
         if (a.globalAvg != b.globalAvg) return a.globalAvg > b.globalAvg;
@@ -249,6 +255,7 @@ void queryTop(DataContext& ctx, int n, const std::string& genre) {
         // Requisitos do enunciado
         if (m.ratingCount < 1000) continue;
         if (m.ratingCount <= 0) continue;
+        // Filtra por gênero, se fornecido, busacando a primeira ocorência da string em "genres"
         if (!genre.empty() && m.genres.find(genre) == std::string::npos) continue;
 
         double avg = m.ratingSum / static_cast<double>(m.ratingCount);
@@ -406,6 +413,7 @@ void queryTags(DataContext& ctx, const std::vector<std::string>& tags) {
         return;
     }
 
+    // Ordena por média global desc, depois ratingCount desc, depois movieId asc
     sort_utils::quickSort(results, [](const TagResult& a, const TagResult& b) {
         if (a.avg != b.avg) return a.avg > b.avg;
         if (a.ratingCount != b.ratingCount) return a.ratingCount > b.ratingCount;

@@ -1,8 +1,4 @@
 #include "data_loader.hpp"
-
-
-
-
 #include <fstream>
 #include <sstream>
 #include <cctype>
