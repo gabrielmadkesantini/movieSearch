@@ -1,53 +1,7 @@
 #include "data_loader.hpp"
 
-/*
-RESPONSABILIDADE DESTE ARQUIVO
-
-- Ler os arquivos CSV:
-    - movies.csv
-    - ratings.csv
-    - tags.csv
-
-- Alinhar estes dados com:
-    - MovieHashTable
-    - UserHashTable
-    - TagHashTable
-    - TitleTrie
-
-DEVE IMPLEMENTAR:
-
-1. loadMovies(path, ctx)
-   - Abrir CSV
-   - Ignorar cabeçalho
-   - Para cada linha:
-        parse movieId, title, genres
-        extrair ano do título (se existir)
-        inserir movie no ctx.movies
-        inserir título no ctx.trie
-
-2. loadRatings(path, ctx)
-   - Abrir CSV
-   - Ignorar cabeçalho
-   - Para cada linha:
-        parse userId, movieId, rating
-        encontrar Movie em ctx.movies
-        atualizar:
-            movie.ratingCount++
-            movie.ratingSum += rating
-        inserir rating na estrutura de ctx.users
-
-3. loadTags(path, ctx)
-   - Abrir CSV
-   - Ignorar cabeçalho
-   - Para cada linha:
-        parse movieId e tag
-        normalizar tag (lowercase/trim)
-        chamar ctx.tags.addMovie(tag, movieId)
-*/
 
 
-
-#include "data_loader.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -55,7 +9,7 @@ DEVE IMPLEMENTAR:
 
 namespace {
 
-// Trim spaces from both ends
+// Funcao auxiliar para remover o espaço em branco da palavra
 std::string trim(const std::string& s) {
     std::size_t start = 0;
     while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
@@ -70,7 +24,7 @@ std::string trim(const std::string& s) {
     return s.substr(start, end - start + 1);
 }
 
-// To lowercase
+// Deixa em minusculo a string
 std::string toLower(const std::string& s) {
     std::string result;
     result.reserve(s.size());
@@ -80,7 +34,7 @@ std::string toLower(const std::string& s) {
     return result;
 }
 
-// Extract year from title like "Movie Name (1995)". Returns 0 if not found.
+// Pega o ano do filme quando estiver num formato como: "Movie Name (1995)". Se não achar retorna 0.
 int extractYear(const std::string& title) {
     if (title.size() < 6) return 0;
 
@@ -103,7 +57,7 @@ int extractYear(const std::string& title) {
 } // namespace
 
 namespace data_loader {
-
+//adiciona os filmes na tabela hash e insere os titulos na trie
 void loadMovies(const std::string& path, DataContext& ctx) {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -111,7 +65,7 @@ void loadMovies(const std::string& path, DataContext& ctx) {
     }
 
     std::string line;
-    // Discard header
+    // Ignora a header do csv
     if (!std::getline(file, line)) {
         return;
     }
@@ -119,7 +73,7 @@ void loadMovies(const std::string& path, DataContext& ctx) {
     while (std::getline(file, line)) {
         if (line.empty()) continue;
 
-        // movieId is before first comma
+        // O id fo filme esta antes da vírgula
         std::size_t firstComma = line.find(',');
         if (firstComma == std::string::npos) continue;
 
@@ -128,6 +82,7 @@ void loadMovies(const std::string& path, DataContext& ctx) {
 
         int movieId = 0;
         try {
+            //converte de string pra inteiro
             movieId = std::stoi(movieIdStr);
         } catch (...) {
             continue;
@@ -137,13 +92,14 @@ void loadMovies(const std::string& path, DataContext& ctx) {
         std::string genres;
 
         if (!rest.empty() && rest[0] == '"') {
-            // Title is quoted
+            // Verifica se o titulo contém aspas
             std::size_t endQuote = rest.find('"', 1);
             if (endQuote == std::string::npos) {
-                // Malformed line
+                // npos --> posição invalida
                 continue;
             }
             title = rest.substr(1, endQuote - 1);
+            //verifica se fecha aspas, as ignora e vai para a proxima virgula
             std::size_t afterTitlePos = endQuote + 1;
             if (afterTitlePos < rest.size() && rest[afterTitlePos] == ',') {
                 ++afterTitlePos;
@@ -152,10 +108,10 @@ void loadMovies(const std::string& path, DataContext& ctx) {
                 genres = rest.substr(afterTitlePos);
             }
         } else {
-            // Title not quoted: goes until next comma
+            // Caso de titulo sem aspas
             std::size_t secondComma = rest.find(',');
             if (secondComma == std::string::npos) {
-                // No genres field
+                // Pega os generos dos filmes
                 title = rest;
                 genres.clear();
             } else {
@@ -168,12 +124,15 @@ void loadMovies(const std::string& path, DataContext& ctx) {
         genres = trim(genres);
         int year = extractYear(title);
 
+        // Insere o filme na tabela hash de filmes referenciando uma instânia da classe Movie e
+        //chamando a função que adiciona ou retorna o filme
         Movie& m = ctx.movies.insertOrGet(movieId);
         m.movieId = movieId;
         m.title = title;
         m.genres = genres;
         m.year = year;
 
+        // Insere o título na trie para buscas por prefixo
         ctx.trie.insert(title, movieId);
     }
 }
@@ -185,11 +144,11 @@ void loadRatings(const std::string& path, DataContext& ctx) {
     }
 
     std::string line;
-    // Discard header
     if (!std::getline(file, line)) {
         return;
     }
-
+    
+    //percorre o arquivo linha por linha
     while (std::getline(file, line)) {
         if (line.empty()) continue;
 
@@ -199,12 +158,13 @@ void loadRatings(const std::string& path, DataContext& ctx) {
         if (!std::getline(ss, userIdStr, ',')) continue;
         if (!std::getline(ss, movieIdStr, ',')) continue;
         if (!std::getline(ss, ratingStr, ',')) continue;
-        // Remaining fields (timestamp etc.) can be ignored
+        // Ignora demais campos que podem ser ignorados, como timestamp, por exemplo
 
         int userId = 0;
         int movieId = 0;
         float rating = 0.0f;
 
+        //faz o parse para int dos dados lidos
         try {
             userId = std::stoi(userIdStr);
             movieId = std::stoi(movieIdStr);
@@ -213,10 +173,13 @@ void loadRatings(const std::string& path, DataContext& ctx) {
             continue;
         }
 
+        //para cada filme achado (vai apenas executar o "get" do insertOrGet, pois os filmes ja foram inseridos no loadMovies)
+        //atualiza a contagem de ratings e a soma dos ratings, nao cria uma nova tabela, apenas atualiza os valores
         Movie& m = ctx.movies.insertOrGet(movieId);
         m.ratingCount += 1;
         m.ratingSum += static_cast<double>(rating);
 
+        //insere a avaliação do usuário na tabela hash de usuários (agora sim, cria uma tabela para registro de cada usuario e suas avaliações)
         User& u = ctx.users.insertOrGet(userId);
         u.userId = userId;
         u.ratings.push_back(UserRating{movieId, rating});
@@ -230,7 +193,7 @@ void loadTags(const std::string& path, DataContext& ctx) {
     }
 
     std::string line;
-    // Discard header
+    // Ignora a header do csv
     if (!std::getline(file, line)) {
         return;
     }
@@ -244,7 +207,6 @@ void loadTags(const std::string& path, DataContext& ctx) {
         if (!std::getline(ss, userIdStr, ',')) continue;
         if (!std::getline(ss, movieIdStr, ',')) continue;
         if (!std::getline(ss, tagStr, ',')) continue;
-        // timestamp can be ignored; may or may not be present
         std::getline(ss, timestampStr);
 
         int movieId = 0;
