@@ -47,12 +47,14 @@ DEVE IMPLEMENTAR:
 
 #include "trie.hpp"
 
+//Inicializa children com nullptr e isTerminal = false
 TrieNode::TrieNode() : isTerminal(false), movieIds() {
     for (int i = 0; i < 128; ++i) {
         children[i] = nullptr;
     }
 }
 
+//Inicializa a raiz da TRIE como um nodo
 TitleTrie::TitleTrie() {
     root = new TrieNode();
 }
